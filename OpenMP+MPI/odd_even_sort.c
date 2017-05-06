@@ -4,7 +4,7 @@
 #include <mpi.h>
 #include <omp.h>
 
-#define N 100
+#define N 1000
 
 int compare(const void *, const void *);
 void mergeArrays(int *, int *, int *, int, int);
@@ -12,7 +12,6 @@ int computeNeighbor(int, int, int);
 
 int main(int argc, char ** argv)
 {
-//    omp_set_num_threads(8);
 
     int i, j, n, rank, size;
     MPI_Status status;
@@ -43,7 +42,7 @@ int main(int argc, char ** argv)
     qsort(arr, numElements, sizeof(int), compare);
 
     //Begin iterations
-    for(n = 0; n < size; n++) {
+    for(n = 1; n < size; n++) {
         MPI_Barrier(MPI_COMM_WORLD);
         int neighbor = computeNeighbor(n, rank, size);
 
@@ -113,12 +112,13 @@ int computeNeighbor(int phase, int rank, int size)
 
 void mergeArrays(int * arr, int * neighborArr, int * temp, int size, int low_or_high)
 {
+    //    omp_set_num_threads(2);
+
     int i, j, k;
-    i = j = k = 0;
 
     //Assume arrays are already sorted
-//    j = 0, k = 0;
-//#pragma omp parallel for private(j, k)
+    j = 0, k = 0;
+#pragma omp parallel for private(j, k)
     for(i = 0, j = 0, k = 0; i < size*2; i++)
     {
         if(j < size && k < size)
@@ -146,10 +146,10 @@ void mergeArrays(int * arr, int * neighborArr, int * temp, int size, int low_or_
             arr[i] = temp[i];
     else {
         i = size;
-//#pragma omp parallel for default(shared)
+#pragma omp parallel for default(shared)
         for (j = 0; j < size;j++) {
             arr[j] = temp[i];
-//#pragma omp critical
+#pragma omp critical
             i++;
         }
     }
